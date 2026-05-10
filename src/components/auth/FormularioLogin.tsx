@@ -1,23 +1,21 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState }       from 'react'
+import { Button }         from '@/components/ui/button'
+import { Input }          from '@/components/ui/input'
+import { Label }          from '@/components/ui/label'
 import { iniciarSesionAction } from '@/controllers/auth.controlador'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
-
 export function FormularioLogin() {
-  const [correo, setCorreo] = useState('')
+  const [correo,    setCorreo]    = useState('')
   const [contrasena, setContrasena] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [cargando, setCargando] = useState(false)
+  const [error,     setError]     = useState<string | null>(null)
+  const [cargando,  setCargando]  = useState(false)
 
   async function manejarEnvio() {
     setError(null)
     setCargando(true)
-
     try {
       await iniciarSesionAction(correo, contrasena)
     } catch (err) {
@@ -30,14 +28,13 @@ export function FormularioLogin() {
 
   return (
     <div className="flex flex-col gap-4">
-
       <div className="flex flex-col gap-1">
         <Label>Correo electrónico</Label>
         <Input
           type="email"
-          placeholder="admin@ecoshelf.com"
+          placeholder="admin@panaderia.com"
           value={correo}
-          onChange={(e) => setCorreo(e.target.value)}
+          onChange={e => setCorreo(e.target.value)}
         />
       </div>
 
@@ -47,7 +44,7 @@ export function FormularioLogin() {
           type="password"
           placeholder="••••••••"
           value={contrasena}
-          onChange={(e) => setContrasena(e.target.value)}
+          onChange={e => setContrasena(e.target.value)}
         />
       </div>
 
@@ -57,14 +54,9 @@ export function FormularioLogin() {
         </div>
       )}
 
-      <Button
-        onClick={manejarEnvio}
-        disabled={cargando}
-        className="w-full"
-      >
+      <Button onClick={manejarEnvio} disabled={cargando} className="w-full">
         {cargando ? 'Ingresando...' : 'Ingresar'}
       </Button>
-
     </div>
   )
 }
