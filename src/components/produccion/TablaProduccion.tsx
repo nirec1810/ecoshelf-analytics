@@ -15,8 +15,8 @@ interface FilaProduccion {
 }
 
 interface Props {
-  panes:  Pan[]
-  fecha:  string
+  panes: Pan[]
+  fecha: string
 }
 
 export function TablaProduccion({ panes, fecha }: Props) {
@@ -32,27 +32,43 @@ export function TablaProduccion({ panes, fecha }: Props) {
       f.pan_id === pan_id ? { ...f, [campo]: valor } : f
     ))
     setGuardado(false)
+    setError(null)
   }
 
+  // Permite negativos para detectar el error visualmente
   function calcularDesperdicio(fila: FilaProduccion): number {
-    return Math.max(0, fila.producido - fila.vendido)
+    return fila.producido - fila.vendido
   }
 
   function estadoBadge(desperdicio: number, producido: number) {
-    if (producido === 0) return <Badge variant="secondary">Sin datos</Badge>
+    if (producido === 0)   return <Badge variant="secondary">Sin datos</Badge>
+    if (desperdicio < 0)   return <Badge variant="destructive">⚠️ Excede producido</Badge>
+    if (desperdicio === 0) return <Badge className="bg-green-100 text-green-700">0</Badge>
     const pct = desperdicio / producido
-    if (pct === 0)   return <Badge className="bg-green-100 text-green-700">0</Badge>
     if (pct <= 0.10) return <Badge className="bg-yellow-100 text-yellow-700">{desperdicio}</Badge>
     return <Badge variant="destructive">{desperdicio} ⚠️</Badge>
   }
 
-  // Totales del día
+  // Si alguna fila tiene vendido > producido, bloquea el guardado
+  const hayErrores = filas.some(f => f.vendido > f.producido)
+
   const totalProducido   = filas.reduce((s, f) => s + f.producido, 0)
   const totalVendido     = filas.reduce((s, f) => s + f.vendido,   0)
-  const totalDesperdicio = filas.reduce((s, f) => s + calcularDesperdicio(f), 0)
+  const totalDesperdicio = filas.reduce((s, f) => s + Math.max(0, calcularDesperdicio(f)), 0)
 
   async function manejarGuardar() {
     setError(null)
+
+    // Validación en el cliente — feedback inmediato antes de llamar al servidor
+    for (const fila of filas) {
+      if (fila.vendido > fila.producido) {
+        setError(
+          `"${fila.nombre}": lo vendido (${fila.vendido}) no puede superar lo producido (${fila.producido})`
+        )
+        return
+      }
+    }
+
     setCargando(true)
     try {
       await guardarProduccionAction(
@@ -61,7 +77,7 @@ export function TablaProduccion({ panes, fecha }: Props) {
       )
       setGuardado(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error inesperado')
+      setError(err instanceof Error ? err.message : 'Error al guardar. Verifica los datos.')
     } finally {
       setCargando(false)
     }
@@ -80,28 +96,35 @@ export function TablaProduccion({ panes, fecha }: Props) {
             </tr>
           </thead>
           <tbody>
-            {filas.map(fila => (
-              <tr key={fila.pan_id} className="border-b border-gray-100">
-                <td className="px-4 py-3 font-medium">{fila.nombre}</td>
-                <td className="px-4 py-3">
-                  <Input
-                    type="number" min={0} className="w-24 h-8"
-                    value={fila.producido || ''}
-                    onChange={e => actualizarFila(fila.pan_id, 'producido', Number(e.target.value))}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <Input
-                    type="number" min={0} className="w-24 h-8"
-                    value={fila.vendido || ''}
-                    onChange={e => actualizarFila(fila.pan_id, 'vendido', Number(e.target.value))}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  {estadoBadge(calcularDesperdicio(fila), fila.producido)}
-                </td>
-              </tr>
-            ))}
+            {filas.map(fila => {
+              const excede = fila.vendido > fila.producido
+              return (
+                <tr
+                  key={fila.pan_id}
+                  className={`border-b border-gray-100 ${excede ? 'bg-red-50' : ''}`}
+                >
+                  <td className="px-4 py-3 font-medium">{fila.nombre}</td>
+                  <td className="px-4 py-3">
+                    <Input
+                      type="number" min={0} className="w-24 h-8"
+                      value={fila.producido || ''}
+                      onChange={e => actualizarFila(fila.pan_id, 'producido', Number(e.target.value))}
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Input
+                      type="number" min={0}
+                      className={`w-24 h-8 ${excede ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                      value={fila.vendido || ''}
+                      onChange={e => actualizarFila(fila.pan_id, 'vendido', Number(e.target.value))}
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    {estadoBadge(calcularDesperdicio(fila), fila.producido)}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
@@ -137,7 +160,7 @@ export function TablaProduccion({ panes, fecha }: Props) {
       <div className="flex justify-end gap-3">
         <Button
           onClick={manejarGuardar}
-          disabled={cargando}
+          disabled={cargando || hayErrores}
         >
           {cargando ? 'Guardando...' : '💾 Guardar registro del día'}
         </Button>
