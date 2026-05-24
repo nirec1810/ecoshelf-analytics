@@ -37,9 +37,11 @@ export function FormularioInsumo({ insumoInicial, onExito }: Props) {
     setError(null)
     setCargando(true)
     try {
-      insumoInicial
-        ? await actualizarInsumoAction(insumoInicial.id, campos)
-        : await crearInsumoAction(campos)
+      if (insumoInicial) {
+        await actualizarInsumoAction(insumoInicial.id, campos)
+      } else {
+        await crearInsumoAction(campos)
+      }
       onExito()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error inesperado')
@@ -104,7 +106,7 @@ export function FormularioInsumo({ insumoInicial, onExito }: Props) {
 
       {error && (
         <div className="col-span-2 text-sm text-red-600 bg-red-50 p-2 rounded">
-          ⚠️ {error}
+          {error}
         </div>
       )}
 

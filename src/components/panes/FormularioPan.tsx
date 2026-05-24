@@ -29,9 +29,11 @@ export function FormularioPan({ panInicial, onExito }: Props) {
     setError(null)
     setCargando(true)
     try {
-      panInicial
-        ? await actualizarPanAction(panInicial.id, campos)
-        : await crearPanAction(campos)
+      if (panInicial) {
+        await actualizarPanAction(panInicial.id, campos)
+      } else {
+        await crearPanAction(campos)
+      }
       onExito()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error inesperado')
@@ -63,7 +65,7 @@ export function FormularioPan({ panInicial, onExito }: Props) {
 
       {error && (
         <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-          ⚠️ {error}
+          {error}
         </div>
       )}
 

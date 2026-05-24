@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge'
 import type { DistribucionPan } from '@/models/sugerencia.model'
 
 interface Props { distribucion: DistribucionPan[] }
@@ -24,7 +23,7 @@ export function TablaDistribucion({ distribucion }: Props) {
       {Object.values(porInsumo).map(filas => (
         <div key={filas[0].insumo_id}>
           <p className="text-sm font-semibold text-gray-600 mb-2">
-            🧂 {filas[0].nombre_insumo}
+            {filas[0].nombre_insumo}
             <span className="ml-2 text-gray-400 font-normal">
               (stock: {filas.reduce((s, f) => s + f.asignado, 0).toFixed(3)} {filas[0].unidad})
             </span>
