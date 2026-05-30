@@ -4,13 +4,9 @@ import { revalidatePath }  from 'next/cache'
 import { PanRepositorio }  from '@/models/pan.repositorio'
 import { RecetaRepositorio } from '@/models/receta.repositorio'
 import type { CrearPanDTO, ActualizarPanDTO, PanConCosto } from '@/models/pan.model'
+import { calcularCostoReceta, calcularMargenPan, redondearCostoUnidad } from '@/lib/calculos'
 
 const RUTA = '/panes'
-
-// Calcula el costo por unidad sumando (cantidad × costo) de cada ingrediente
-function calcularCosto(receta: { cantidad: number; insumo: { costo: number } }[]): number {
-  return receta.reduce((total, r) => total + r.cantidad * r.insumo.costo, 0)
-}
 
 export async function obtenerPanesAction() {
   return await PanRepositorio.obtenerTodos()
@@ -22,11 +18,11 @@ export async function obtenerPanesConCostoAction(): Promise<PanConCosto[]> {
   const panesConCosto = await Promise.all(
     panes.map(async pan => {
       const receta = await RecetaRepositorio.obtenerPorPan(pan.id)
-      const costo  = calcularCosto(receta)
+      const costo  = calcularCostoReceta(receta)
       return {
         ...pan,
-        costo:  Number(costo.toFixed(4)),
-        margen: Number((pan.precio - costo).toFixed(4)),
+        costo:  redondearCostoUnidad(costo),
+        margen: calcularMargenPan(pan.precio, costo),
       }
     })
   )

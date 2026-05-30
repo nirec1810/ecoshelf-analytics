@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge }  from '@/components/ui/badge'
 import { eliminarPanAction, toggleActivoAction } from '@/controllers/pan.controlador'
 import type { PanConCosto } from '@/models/pan.model'
+import { monedaDecimal } from '@/lib/formatos'
 
 interface Props {
   panes:    PanConCosto[]
@@ -43,10 +44,10 @@ export function TablaPanes({ panes, onEditar }: Props) {
         {panes.map(pan => (
           <TableRow key={pan.id} className={!pan.activo ? 'opacity-50' : ''}>
             <TableCell className="font-medium">{pan.nombre}</TableCell>
-            <TableCell>${pan.precio.toFixed(2)}</TableCell>
-            <TableCell className="text-gray-500">${pan.costo.toFixed(4)}</TableCell>
+            <TableCell>{monedaDecimal(pan.precio)}</TableCell>
+            <TableCell className="text-gray-500">{monedaDecimal(pan.costo, 4)}</TableCell>
             <TableCell className="text-green-600 font-medium">
-              ${pan.margen.toFixed(4)}
+              {monedaDecimal(pan.margen, 4)}
             </TableCell>
             <TableCell>
               <Badge variant={pan.activo ? 'default' : 'secondary'}>

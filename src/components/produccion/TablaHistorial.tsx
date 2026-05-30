@@ -2,19 +2,18 @@
 
 import { Badge } from '@/components/ui/badge'
 import type { ProduccionConPan } from '@/models/produccion.model'
+import { monedaDecimal, porcentajeTexto } from '@/lib/formatos'
 
 interface Props {
   registros: ProduccionConPan[]
 }
 
 function pctDesperdicio(desperdicio: number, producido: number): string {
-  if (producido === 0) return '—'
-  return ((desperdicio / producido) * 100).toFixed(1) + '%'
+  return porcentajeTexto(desperdicio, producido)
 }
 
 function pctVenta(vendido: number, producido: number): string {
-  if (producido === 0) return '—'
-  return ((vendido / producido) * 100).toFixed(1) + '%'
+  return porcentajeTexto(vendido, producido)
 }
 
 function badgeDesperdicio(desperdicio: number, producido: number) {
@@ -62,8 +61,8 @@ export function TablaHistorial({ registros }: Props) {
               <td className="px-4 py-3 text-green-600">{r.vendido}</td>
               <td className="px-4 py-3">{pctVenta(r.vendido, r.producido)}</td>
               <td className="px-4 py-3">{badgeDesperdicio(r.desperdicio, r.producido)}</td>
-              <td className="px-4 py-3 text-gray-500">${r.costo.toFixed(2)}</td>
-              <td className="px-4 py-3 text-green-600 font-medium">${r.ganancia.toFixed(2)}</td>
+              <td className="px-4 py-3 text-gray-500">{monedaDecimal(r.costo)}</td>
+              <td className="px-4 py-3 text-green-600 font-medium">{monedaDecimal(r.ganancia)}</td>
             </tr>
           ))}
         </tbody>

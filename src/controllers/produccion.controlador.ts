@@ -5,18 +5,25 @@ import { ProduccionRepositorio } from '@/models/produccion.repositorio'
 import { RecetaRepositorio }     from '@/models/receta.repositorio'
 import { PanRepositorio }        from '@/models/pan.repositorio'
 import type { RegistroDiario }   from '@/models/produccion.model'
+import { fechaISO }              from '@/lib/fechas'
+import {
+  calcularCostoProduccion,
+  calcularCostoReceta,
+  calcularDesperdicio,
+  calcularGananciaProduccion,
+} from '@/lib/calculos'
 
 const RUTA = '/produccion'
 
 // ── Calcula el costo de producción por unidad ──────────────────
 async function calcularCostoPorUnidad(pan_id: string): Promise<number> {
   const receta = await RecetaRepositorio.obtenerPorPan(pan_id)
-  return receta.reduce((total, r) => total + r.cantidad * r.insumo.costo, 0)
+  return calcularCostoReceta(receta)
 }
 
 // ── Obtiene el registro del día actual ─────────────────────────
 export async function obtenerProduccionHoyAction() {
-  const hoy = new Date().toISOString().split('T')[0]
+  const hoy = fechaISO()
   return await ProduccionRepositorio.obtenerPorFecha(hoy)
 }
 
@@ -47,9 +54,9 @@ export async function guardarProduccionAction(
 
       // ── Cálculos del core ──────────────────────────────────
       const costo_unidad  = await calcularCostoPorUnidad(pan_id)
-      const desperdicio   = producido - vendido
-      const costo         = Number((costo_unidad  * producido).toFixed(2))
-      const ganancia      = Number((vendido * pan.precio - costo).toFixed(2))
+      const desperdicio   = calcularDesperdicio(producido, vendido)
+      const costo         = calcularCostoProduccion(costo_unidad, producido)
+      const ganancia      = calcularGananciaProduccion(vendido, pan.precio, costo)
 
       return ProduccionRepositorio.guardar({
         pan_id,

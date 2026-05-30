@@ -9,6 +9,7 @@ import { Input }  from '@/components/ui/input'
 import { eliminarInsumoAction, actualizarStockSemanaAction } from '@/controllers/insumo.controlador'
 import type { Insumo } from '@/models/insumo.model'
 import { useState } from 'react'
+import { monedaDecimal } from '@/lib/formatos'
 
 interface Props {
   insumos:  Insumo[]
@@ -47,7 +48,7 @@ export function TablaInsumos({ insumos, onEditar }: Props) {
           <TableRow key={insumo.id}>
             <TableCell className="font-medium">{insumo.nombre}</TableCell>
             <TableCell>{insumo.unidad}</TableCell>
-            <TableCell>${insumo.costo.toFixed(4)}/{insumo.unidad}</TableCell>
+            <TableCell>{monedaDecimal(insumo.costo, 4)}/{insumo.unidad}</TableCell>
             <TableCell>{insumo.stock} {insumo.unidad}</TableCell>
             <TableCell>
               <div className="flex gap-2 items-center">

@@ -8,6 +8,7 @@ import { TarjetaSugerencia }     from '@/components/sugerencias/TarjetaSugerenci
 import { TablaDistribucion }     from '@/components/sugerencias/TablaDistribucion'
 import { ejecutarMotorAction }   from '@/controllers/sugerencia.controlador'
 import type { ResultadoMotor }   from '@/models/sugerencia.model'
+import { monedaDecimal, proporcionTexto } from '@/lib/formatos'
 
 interface Props {
   inicioDefault: string
@@ -49,7 +50,7 @@ export function SugerenciasCliente({ inicioDefault, finDefault }: Props) {
             <Input type="date" value={fin} onChange={e => setFin(e.target.value)} className="w-40" />
           </div>
           <Button onClick={manejarEjecutar} disabled={cargando}>
-            {cargando ? '⚙️ Analizando...' : '▶ Ejecutar motor'}
+            {cargando ? 'Analizando...' : 'Ejecutar motor'}
           </Button>
         </div>
         {error && <p className="text-sm text-red-600 mt-3">⚠️ {error}</p>}
@@ -62,8 +63,8 @@ export function SugerenciasCliente({ inicioDefault, finDefault }: Props) {
             {[
               { label: 'Panes analizados',  valor: resultado.metricas.length,               color: 'text-gray-800' },
               { label: 'Sugerencias',        valor: resultado.sugerencias.length,             color: 'text-amber-600' },
-              { label: 'Ganancia real',      valor: `$${resultado.ganancia_actual.toFixed(2)}`, color: 'text-gray-800' },
-              { label: 'Ganancia estimada',  valor: `$${resultado.ganancia_est.toFixed(2)}`,    color: 'text-green-600' },
+              { label: 'Ganancia real',      valor: monedaDecimal(resultado.ganancia_actual), color: 'text-gray-800' },
+              { label: 'Ganancia estimada',  valor: monedaDecimal(resultado.ganancia_est),    color: 'text-green-600' },
             ].map(item => (
               <div key={item.label} className="bg-white border border-gray-200 rounded-xl p-4 text-center">
                 <p className={`text-2xl font-bold ${item.color}`}>{item.valor}</p>
@@ -74,7 +75,7 @@ export function SugerenciasCliente({ inicioDefault, finDefault }: Props) {
 
           {/* Métricas por pan */}
           <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <h2 className="text-base font-semibold text-gray-700 mb-4">📊 Métricas por pan</h2>
+            <h2 className="text-base font-semibold text-gray-700 mb-4">Métricas por pan</h2>
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left">
@@ -94,16 +95,16 @@ export function SugerenciasCliente({ inicioDefault, finDefault }: Props) {
                     <td className="px-3 py-2 text-green-600">{m.vendido}</td>
                     <td className="px-3 py-2">
                       <span className={m.pct_venta >= 0.85 ? 'text-green-600 font-semibold' : ''}>
-                        {(m.pct_venta * 100).toFixed(1)}%
+                        {proporcionTexto(m.pct_venta)}
                       </span>
                     </td>
                     <td className="px-3 py-2">
                       <span className={m.pct_desp > 0.20 ? 'text-red-600 font-semibold' : ''}>
-                        {(m.pct_desp * 100).toFixed(1)}%
+                        {proporcionTexto(m.pct_desp)}
                         {m.pct_desp > 0.20 && ' ⚠️'}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-gray-500">${m.margen.toFixed(4)}</td>
+                    <td className="px-3 py-2 text-gray-500">{monedaDecimal(m.margen, 4)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -115,7 +116,6 @@ export function SugerenciasCliente({ inicioDefault, finDefault }: Props) {
             <h2 className="text-base font-semibold text-gray-700 mb-4">💡 Sugerencias</h2>
             {resultado.sugerencias.length === 0 ? (
               <div className="text-center py-8 text-gray-400">
-                <p className="text-3xl mb-2">✅</p>
                 <p>Producción optimizada. No se detectaron excesos significativos.</p>
               </div>
             ) : (

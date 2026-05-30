@@ -1,4 +1,5 @@
 import type { DistribucionPan } from '@/models/sugerencia.model'
+import { monedaDecimal } from '@/lib/formatos'
 
 interface Props { distribucion: DistribucionPan[] }
 
@@ -43,7 +44,7 @@ export function TablaDistribucion({ distribucion }: Props) {
                   <td className="px-3 py-2 font-medium">{f.nombre}</td>
                   <td className="px-3 py-2 text-gray-500">{f.asignado} {f.unidad}</td>
                   <td className="px-3 py-2">{f.produccion_est} u</td>
-                  <td className="px-3 py-2 text-green-600 font-medium">${f.ganancia_est.toFixed(2)}</td>
+                  <td className="px-3 py-2 text-green-600 font-medium">{monedaDecimal(f.ganancia_est)}</td>
                 </tr>
               ))}
               <tr className="bg-gray-50 font-semibold">
@@ -53,7 +54,7 @@ export function TablaDistribucion({ distribucion }: Props) {
                 </td>
                 <td className="px-3 py-2">{filas.reduce((s, f) => s + f.produccion_est, 0)} u</td>
                 <td className="px-3 py-2 text-green-600">
-                  ${filas.reduce((s, f) => s + f.ganancia_est, 0).toFixed(2)}
+                  {monedaDecimal(filas.reduce((s, f) => s + f.ganancia_est, 0))}
                 </td>
               </tr>
             </tbody>

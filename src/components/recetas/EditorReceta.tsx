@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
@@ -18,6 +19,8 @@ import {
 } from '@/controllers/receta.controlador'
 import type { RecetaConInsumo } from '@/models/receta.model'
 import type { Insumo }          from '@/models/insumo.model'
+import { calcularCostoReceta }  from '@/lib/calculos'
+import { monedaDecimal }        from '@/lib/formatos'
 
 interface Props {
   pan_id:   string
@@ -26,11 +29,16 @@ interface Props {
 }
 
 export function EditorReceta({ pan_id, receta, insumos }: Props) {
+  const router = useRouter()
   const [filas,      setFilas]      = useState<RecetaConInsumo[]>(receta)
   const [insumoSel,  setInsumoSel]  = useState('')
   const [cantidad,   setCantidad]   = useState(0)
   const [error,      setError]      = useState<string | null>(null)
   const [cargando,   setCargando]   = useState(false)
+
+  useEffect(() => {
+    setFilas(receta)
+  }, [receta])
 
   // Insumos que aún no están en la receta
   const insumosDisponibles = insumos.filter(
@@ -38,9 +46,7 @@ export function EditorReceta({ pan_id, receta, insumos }: Props) {
   )
 
   // Costo total de la receta por unidad
-  const costoTotal = filas.reduce(
-    (total, f) => total + f.cantidad * f.insumo.costo, 0
-  )
+  const costoTotal = calcularCostoReceta(filas)
 
   async function manejarAgregar() {
     if (!insumoSel) return setError('Selecciona un insumo')
@@ -52,6 +58,7 @@ export function EditorReceta({ pan_id, receta, insumos }: Props) {
       await agregarIngredienteAction({ pan_id, insumo_id: insumoSel, cantidad })
       setInsumoSel('')
       setCantidad(0)
+      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error inesperado')
     } finally {
@@ -104,7 +111,7 @@ export function EditorReceta({ pan_id, receta, insumos }: Props) {
                 </TableCell>
                 <TableCell className="text-gray-500">{fila.insumo.unidad}</TableCell>
                 <TableCell className="text-gray-500">
-                  ${(fila.cantidad * fila.insumo.costo).toFixed(4)}
+                  {monedaDecimal(fila.cantidad * fila.insumo.costo, 4)}
                 </TableCell>
                 <TableCell>
                   <Button
@@ -123,7 +130,7 @@ export function EditorReceta({ pan_id, receta, insumos }: Props) {
       {/* Costo total */}
       {filas.length > 0 && (
         <div className="text-right text-sm text-gray-500">
-          Costo por unidad: <span className="font-semibold text-gray-700">${costoTotal.toFixed(4)}</span>
+          Costo por unidad: <span className="font-semibold text-gray-700">{monedaDecimal(costoTotal, 4)}</span>
         </div>
       )}
 

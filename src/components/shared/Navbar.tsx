@@ -27,7 +27,7 @@ export function Navbar() {
 
   return (
     <nav className="bg-yellow-800 text-white px-6 h-12 flex items-center gap-6 sticky top-0 z-50">
-      <span className="font-bold text-base mr-2">🍞 EcoshelfAnalytics</span>
+      <span className="font-bold text-base mr-2">EcoshelfAnalytics</span>
 
       <div className="flex items-center gap-1 flex-1">
         {ENLACES.map(({ href, label }) => {

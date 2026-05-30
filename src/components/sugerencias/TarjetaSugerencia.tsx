@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import type { Sugerencia } from '@/models/sugerencia.model'
+import { monedaDecimal, proporcionTexto } from '@/lib/formatos'
 
 interface Props { sugerencia: Sugerencia }
 
@@ -12,11 +13,11 @@ export function TarjetaSugerencia({ sugerencia }: Props) {
       {/* Encabezado */}
       <div className="flex items-center gap-2 flex-wrap">
         <Badge variant="destructive">
-          ↘ {pan_exceso.nombre} · {(pan_exceso.pct_desp * 100).toFixed(1)}% desperdicio
+          ↘ {pan_exceso.nombre} · {proporcionTexto(pan_exceso.pct_desp)} desperdicio
         </Badge>
         <span className="text-gray-400 text-sm">→</span>
         <Badge className="bg-green-100 text-green-700">
-          ↗ {pan_demanda.nombre} · {(pan_demanda.pct_venta * 100).toFixed(1)}% venta
+          ↗ {pan_demanda.nombre} · {proporcionTexto(pan_demanda.pct_venta)} venta
         </Badge>
       </div>
 
@@ -37,8 +38,8 @@ export function TarjetaSugerencia({ sugerencia }: Props) {
 
       {/* Ganancia estimada */}
       <p className="text-sm font-semibold text-green-700">
-        📈 Ganancia estimada adicional: +${ganancia_estimada.toFixed(2)}/día
-        · +${(ganancia_estimada * 7).toFixed(2)}/semana
+        📈 Ganancia estimada adicional: +{monedaDecimal(ganancia_estimada)}/día
+        · +{monedaDecimal(ganancia_estimada * 7)}/semana
       </p>
 
     </div>

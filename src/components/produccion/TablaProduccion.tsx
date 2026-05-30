@@ -6,6 +6,7 @@ import { Input }     from '@/components/ui/input'
 import { Badge }     from '@/components/ui/badge'
 import { guardarProduccionAction } from '@/controllers/produccion.controlador'
 import type { Pan }  from '@/models/pan.model'
+import { calcularDesperdicio as calcularDesperdicioProduccion } from '@/lib/calculos'
 
 interface FilaProduccion {
   pan_id:    string
@@ -37,7 +38,7 @@ export function TablaProduccion({ panes, fecha }: Props) {
 
   // Permite negativos para detectar el error visualmente
   function calcularDesperdicio(fila: FilaProduccion): number {
-    return fila.producido - fila.vendido
+    return calcularDesperdicioProduccion(fila.producido, fila.vendido)
   }
 
   function estadoBadge(desperdicio: number, producido: number) {
@@ -153,7 +154,7 @@ export function TablaProduccion({ panes, fecha }: Props) {
 
       {guardado && (
         <div className="text-sm text-green-600 bg-green-50 p-3 rounded">
-          ✅ Registro guardado correctamente
+          Registro guardado correctamente
         </div>
       )}
 
@@ -162,7 +163,7 @@ export function TablaProduccion({ panes, fecha }: Props) {
           onClick={manejarGuardar}
           disabled={cargando || hayErrores}
         >
-          {cargando ? 'Guardando...' : '💾 Guardar registro del día'}
+          {cargando ? 'Guardando...' : 'Guardar registro del día'}
         </Button>
       </div>
     </div>

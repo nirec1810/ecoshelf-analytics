@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { obtenerDashboardAction } from '@/controllers/dashboard.controlador'
+import { monedaDecimal } from '@/lib/formatos'
 
 export default async function PaginaDashboard() {
   const { inicio, fin, stats, porPan } = await obtenerDashboardAction()
@@ -57,7 +58,7 @@ export default async function PaginaDashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-amber-700 font-semibold">
-                      ${item.ganancia.toFixed(2)}
+                      {monedaDecimal(item.ganancia)}
                     </td>
                   </tr>
                 ))}

@@ -3,6 +3,7 @@
 import { ProduccionRepositorio } from '@/models/produccion.repositorio'
 import { PanRepositorio } from '@/models/pan.repositorio'
 import type { Pan } from '@/models/pan.model'
+import type { ProduccionConPan } from '@/models/produccion.model'
 import { moneda, porcentaje } from '@/lib/formatos'
 import { rangoUltimosDias } from '@/lib/fechas'
 
@@ -16,6 +17,38 @@ interface MetricaDashboardPan {
   pctDesperdicio: number
 }
 
+type TotalesProduccion = Pick<
+  ProduccionConPan,
+  'producido' | 'vendido' | 'desperdicio' | 'ganancia'
+>
+
+function crearTotales(): TotalesProduccion {
+  return { producido: 0, vendido: 0, desperdicio: 0, ganancia: 0 }
+}
+
+function agruparPorPan(registros: ProduccionConPan[]) {
+  const agrupado = new Map<string, TotalesProduccion>()
+  const totales = crearTotales()
+
+  for (const registro of registros) {
+    const porPan = agrupado.get(registro.pan_id) ?? crearTotales()
+
+    porPan.producido += registro.producido
+    porPan.vendido += registro.vendido
+    porPan.desperdicio += registro.desperdicio
+    porPan.ganancia += registro.ganancia
+
+    totales.producido += registro.producido
+    totales.vendido += registro.vendido
+    totales.desperdicio += registro.desperdicio
+    totales.ganancia += registro.ganancia
+
+    agrupado.set(registro.pan_id, porPan)
+  }
+
+  return { agrupado, totales }
+}
+
 export async function obtenerDashboardAction() {
   const { inicio, fin } = rangoUltimosDias(7)
 
@@ -24,36 +57,29 @@ export async function obtenerDashboardAction() {
     PanRepositorio.obtenerActivos(),
   ])
 
-  const totalProducido   = registros.reduce((s, r) => s + r.producido, 0)
-  const totalVendido     = registros.reduce((s, r) => s + r.vendido, 0)
-  const totalDesperdicio = registros.reduce((s, r) => s + r.desperdicio, 0)
-  const totalGanancia    = registros.reduce((s, r) => s + r.ganancia, 0)
+  const { agrupado, totales } = agruparPorPan(registros)
 
   const porPan: MetricaDashboardPan[] = panes
     .map(pan => {
-      const filas = registros.filter(r => r.pan_id === pan.id)
-      const producido   = filas.reduce((s, r) => s + r.producido, 0)
-      const vendido     = filas.reduce((s, r) => s + r.vendido, 0)
-      const desperdicio = filas.reduce((s, r) => s + r.desperdicio, 0)
-      const ganancia    = filas.reduce((s, r) => s + r.ganancia, 0)
+      const metricas = agrupado.get(pan.id) ?? crearTotales()
 
       return {
         pan,
-        producido,
-        vendido,
-        desperdicio,
-        ganancia,
-        pctVenta: porcentaje(vendido, producido),
-        pctDesperdicio: porcentaje(desperdicio, producido),
+        producido: metricas.producido,
+        vendido: metricas.vendido,
+        desperdicio: metricas.desperdicio,
+        ganancia: metricas.ganancia,
+        pctVenta: porcentaje(metricas.vendido, metricas.producido),
+        pctDesperdicio: porcentaje(metricas.desperdicio, metricas.producido),
       }
     })
     .filter(m => m.producido > 0)
 
   const stats = [
-    { label: 'Producido',   valor: `${totalProducido} u`,       color: 'text-gray-800' },
-    { label: 'Vendido',     valor: `${totalVendido} u`,         color: 'text-green-600' },
-    { label: 'Desperdicio', valor: `${totalDesperdicio} u`,     color: 'text-red-500' },
-    { label: 'Ganancia',    valor: moneda(totalGanancia),       color: 'text-amber-700' },
+    { label: 'Producido',   valor: `${totales.producido} u`,       color: 'text-gray-800' },
+    { label: 'Vendido',     valor: `${totales.vendido} u`,         color: 'text-green-600' },
+    { label: 'Desperdicio', valor: `${totales.desperdicio} u`,     color: 'text-red-500' },
+    { label: 'Ganancia',    valor: moneda(totales.ganancia),       color: 'text-amber-700' },
   ]
 
   return {
