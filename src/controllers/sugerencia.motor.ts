@@ -10,9 +10,6 @@ import type {
   Sugerencia,
 } from '@/models/sugerencia.model'
 
-const UMBRAL_DESPERDICIO = 0.20
-const UMBRAL_DEMANDA = 0.85
-
 async function calcularMetricas(inicio: string, fin: string): Promise<MetricaPan[]> {
   const [agrupado, panes] = await Promise.all([
     ProduccionRepositorio.obtenerAgrupado(inicio, fin),
@@ -76,7 +73,7 @@ async function calcularExtras(
   return extras === Infinity ? 0 : extras
 }
 
-async function generarSugerencias(metricas: MetricaPan[]): Promise<Sugerencia[]> {
+async function generarSugerencias(metricas: MetricaPan[], UMBRAL_DESPERDICIO: number, UMBRAL_DEMANDA: number): Promise<Sugerencia[]> {
   const panesExceso = metricas.filter(m => m.pct_desp > UMBRAL_DESPERDICIO)
   const panesDemanda = metricas.filter(m => m.pct_venta >= UMBRAL_DEMANDA)
 
@@ -161,13 +158,15 @@ async function distribuirStock(metricas: MetricaPan[]): Promise<DistribucionPan[
   return resultado
 }
 
-export async function calcularResultadoMotor(inicio: string, fin: string): Promise<ResultadoMotor> {
+export async function calcularResultadoMotor(inicio: string, fin: string, UMBRAL_DESPERDICIO: number, UMBRAL_DEMANDA: number): Promise<ResultadoMotor> {
   const metricas = await calcularMetricas(inicio, fin)
 
   if (metricas.length === 0) {
     return {
       semana_inicio: inicio,
       semana_fin: fin,
+      UMBRAL_DESPERDICIO: UMBRAL_DESPERDICIO,
+      UMBRAL_DEMANDA: UMBRAL_DEMANDA,
       metricas: [],
       sugerencias: [],
       distribucion: [],
@@ -177,12 +176,12 @@ export async function calcularResultadoMotor(inicio: string, fin: string): Promi
   }
 
   const [sugerencias, distribucion] = await Promise.all([
-    generarSugerencias(metricas),
+    generarSugerencias(metricas, UMBRAL_DESPERDICIO, UMBRAL_DEMANDA),
     distribuirStock(metricas),
   ])
 
   const ganancia_actual = Number(
-    metricas.reduce((t, m) => t + m.vendido * m.precio, 0).toFixed(2)
+    metricas.reduce((t, m) => t + m.vendido * m.margen, 0).toFixed(2)
   )
 
   const ganancia_est = Number(
@@ -192,6 +191,8 @@ export async function calcularResultadoMotor(inicio: string, fin: string): Promi
   return {
     semana_inicio: inicio,
     semana_fin: fin,
+    UMBRAL_DESPERDICIO: UMBRAL_DESPERDICIO,
+    UMBRAL_DEMANDA: UMBRAL_DEMANDA,
     metricas,
     sugerencias,
     distribucion,

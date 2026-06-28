@@ -42,6 +42,8 @@ export interface DistribucionPan {
 export interface ResultadoMotor {
   semana_inicio:   string
   semana_fin:      string
+  UMBRAL_DESPERDICIO: number
+  UMBRAL_DEMANDA: number
   metricas:        MetricaPan[]
   sugerencias:     Sugerencia[]
   distribucion:    DistribucionPan[]

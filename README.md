@@ -61,8 +61,8 @@ El módulo de lotes queda fuera del alcance actual. Si se retoma en el futuro, d
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/Ecoshelf Analytics.git
-cd Ecoshelf Analytics
+git clone https://github.com/nirec1810/ecoshelf-analytics.git
+cd ecoshelf-analytics
 ```
 
 ### 2. Instalar dependencias
@@ -146,6 +146,39 @@ El motor de sugerencias se ejecuta desde `ejecutarMotorAction(inicio, fin)` y de
 El resultado compara panes con exceso contra panes con demanda, estima insumos liberados, calcula producción extra posible y ordena las sugerencias por ganancia estimada.
 
 ---
+
+## Motor de Analytics — Arquitectura Interna
+
+El subsistema de análisis aplica principios SOLID y patrones de diseño GoF para mantener
+la lógica de negocio desacoplada y extensible.
+
+### Principios SOLID aplicados
+
+| Principio | Archivo | Mejora |
+|---|---|---|
+| **SRP** — Single Responsibility | `metricas.servicio.ts` / `sugerencias.servicio.ts` / `distribucion.servicio.ts` | Cada servicio tiene una única razón de cambio; el motor monolítico original fue descompuesto en tres clases especializadas |
+| **OCP** — Open/Closed | `motor.config.ts` | Los umbrales de decisión son inyectables vía `MotorConfig`; cambiarlos no requiere modificar el código del motor |
+
+### Patrones de diseño aplicados
+
+| Patrón | Archivo | Rol |
+|---|---|---|
+| **Strategy** | `ordenador.strategy.ts` | Define `IOrdenadorSugerencias` con implementaciones intercambiables: `OrdenarPorGanancia` y `OrdenarPorDesperdicioReducido` |
+| **Facade** | `motor.facade.ts` | Punto de entrada único del subsistema; oculta la existencia de los tres servicios internos al controlador |
+
+### Estructura de archivos
+
+```
+src/controllers/
+├── sugerencia.controlador.ts     ← usa MotorFacade
+└── motor/
+    ├── motor.config.ts           ← OCP: MotorConfig inyectable
+    ├── motor.facade.ts           ← Facade: orquesta y expone ejecutar()
+    ├── ordenador.strategy.ts     ← Strategy: IOrdenadorSugerencias + implementaciones
+    ├── metricas.servicio.ts      ← SRP: calcula MetricaPan[]
+    ├── sugerencias.servicio.ts   ← SRP + OCP + Strategy
+    └── distribucion.servicio.ts  ← SRP: distribuye stock semanal
+```
 
 ## Autenticación
 

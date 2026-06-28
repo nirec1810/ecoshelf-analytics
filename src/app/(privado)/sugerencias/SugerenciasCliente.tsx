@@ -21,6 +21,8 @@ export function SugerenciasCliente({ inicioDefault, finDefault }: Props) {
   const [resultado, setResultado] = useState<ResultadoMotor | null>(null)
   const [cargando,  setCargando]  = useState(false)
   const [error,     setError]     = useState<string | null>(null)
+  const [desperdicio, setDesperdicio] = useState(0)
+  const [demanda, setdemanda] = useState(0)
 
   async function manejarEjecutar() {
     setError(null)
@@ -47,7 +49,7 @@ export function SugerenciasCliente({ inicioDefault, finDefault }: Props) {
           </div>
           <div className="flex flex-col gap-1">
             <Label>Semana fin</Label>
-            <Input type="date" value={fin} onChange={e => setFin(e.target.value)} className="w-40" />
+            <Input type="date" value={fin} onChange={e => setFin(e.target.value)} className="w-40" />            
           </div>
           <Button onClick={manejarEjecutar} disabled={cargando}>
             {cargando ? 'Analizando...' : 'Ejecutar motor'}
@@ -94,14 +96,14 @@ export function SugerenciasCliente({ inicioDefault, finDefault }: Props) {
                     <td className="px-3 py-2">{m.producido}</td>
                     <td className="px-3 py-2 text-green-600">{m.vendido}</td>
                     <td className="px-3 py-2">
-                      <span className={m.pct_venta >= 0.85 ? 'text-green-600 font-semibold' : ''}>
+                      <span className={m.pct_venta >= demanda ? 'text-green-600 font-semibold' : ''}>
                         {proporcionTexto(m.pct_venta)}
                       </span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className={m.pct_desp > 0.20 ? 'text-red-600 font-semibold' : ''}>
+                      <span className={m.pct_desp > desperdicio ? 'text-red-600 font-semibold' : ''}>
                         {proporcionTexto(m.pct_desp)}
-                        {m.pct_desp > 0.20 && ' ⚠️'}
+                        {m.pct_desp > desperdicio && ' ⚠️'}
                       </span>
                     </td>
                     <td className="px-3 py-2 text-gray-500">{monedaDecimal(m.margen, 4)}</td>
@@ -129,7 +131,7 @@ export function SugerenciasCliente({ inicioDefault, finDefault }: Props) {
 
           {/* Distribución de stock */}
           <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <h2 className="text-base font-semibold text-gray-700 mb-4">🧂 Distribución de stock semanal</h2>
+            <h2 className="text-base font-semibold text-gray-700 mb-4">Distribución de stock semanal</h2>
             <TablaDistribucion distribucion={resultado.distribucion} />
           </div>
         </>
